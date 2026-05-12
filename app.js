@@ -21,6 +21,14 @@ function addSession(session) {
   saveSessions(sessions);
 }
 
+function deleteSession(id) {
+  saveSessions(loadSessions().filter(s => s.id !== id));
+}
+
+function deleteAllSessionsForDate(dateStr) {
+  saveSessions(loadSessions().filter(s => s.date !== dateStr));
+}
+
 function getSessionsForDate(dateStr) {
   return loadSessions().filter(s => s.date === dateStr);
 }
@@ -174,8 +182,16 @@ function renderTodaySessions() {
         <div class="session-detail">${formatDuration(s.durationSeconds)}</div>
       </div>
       <span class="session-badge">${s.kickCount} kicks</span>
+      <button class="btn-delete" data-id="${s.id}" aria-label="Delete session">&#10005;</button>
     </li>
   `).join('');
+
+  list.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', () => {
+      deleteSession(btn.dataset.id);
+      renderTodaySessions();
+    });
+  });
 }
 
 // ── Calendar ──────────────────────────────────────────────────────────────────
@@ -252,35 +268,59 @@ function renderCalendar() {
 }
 
 // ── Day detail sheet ──────────────────────────────────────────────────────────
+let currentSheetDate = null;
+
 function openDaySheet(dateStr) {
-  const sessions = getSessionsForDate(dateStr);
+  currentSheetDate = dateStr;
   const overlay = document.getElementById('day-sheet-overlay');
   const sheet   = document.getElementById('day-sheet');
-  const title   = document.getElementById('sheet-title');
-  const list    = document.getElementById('sheet-sessions');
 
   const [y, m, d] = dateStr.split('-').map(Number);
-  title.textContent = new Date(y, m - 1, d).toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric'
-  });
+  document.getElementById('sheet-title').textContent = new Date(y, m - 1, d)
+    .toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-  list.innerHTML = sessions.length === 0
-    ? '<li>No sessions recorded.</li>'
-    : sessions.map(s => `
-        <li>
-          <strong>${formatTime(s.startTime)}</strong> &mdash;
-          ${s.kickCount} kicks in ${formatDuration(s.durationSeconds)}
-          ${s.completed ? '&#10003;' : '(incomplete)'}
-        </li>
-      `).join('');
-
+  renderSheetSessions(dateStr);
   overlay.classList.remove('hidden');
   sheet.classList.remove('hidden');
+}
+
+function renderSheetSessions(dateStr) {
+  const sessions = getSessionsForDate(dateStr);
+  const list = document.getElementById('sheet-sessions');
+  const btnDeleteDay = document.getElementById('btn-delete-day');
+
+  if (sessions.length === 0) {
+    list.innerHTML = '<li>No sessions recorded.</li>';
+    btnDeleteDay.style.display = 'none';
+    return;
+  }
+
+  btnDeleteDay.style.display = '';
+  list.innerHTML = sessions.map(s => `
+    <li class="sheet-session-row">
+      <div class="sheet-session-info">
+        <strong>${formatTime(s.startTime)}</strong> &mdash;
+        ${s.kickCount} kicks in ${formatDuration(s.durationSeconds)}
+        ${s.completed ? '<span class="check-mark">&#10003;</span>' : '<span class="incomplete-tag">incomplete</span>'}
+      </div>
+      <button class="btn-delete" data-id="${s.id}" aria-label="Delete session">&#10005;</button>
+    </li>
+  `).join('');
+
+  list.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', () => {
+      deleteSession(btn.dataset.id);
+      renderSheetSessions(dateStr);
+      renderCalendar();
+      if (dateStr === todayStr()) renderTodaySessions();
+    });
+  });
 }
 
 function closeDaySheet() {
   document.getElementById('day-sheet-overlay').classList.add('hidden');
   document.getElementById('day-sheet').classList.add('hidden');
+  currentSheetDate = null;
 }
 
 // ── Tab navigation ────────────────────────────────────────────────────────────
@@ -328,9 +368,17 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => switchScreen(btn.dataset.screen));
   });
 
-  // day sheet close
+  // day sheet close + delete-all
   document.getElementById('btn-close-sheet').addEventListener('click', closeDaySheet);
   document.getElementById('day-sheet-overlay').addEventListener('click', closeDaySheet);
+  document.getElementById('btn-delete-day').addEventListener('click', () => {
+    if (!currentSheetDate) return;
+    if (!confirm('Delete all sessions for this day?')) return;
+    deleteAllSessionsForDate(currentSheetDate);
+    renderSheetSessions(currentSheetDate);
+    renderCalendar();
+    if (currentSheetDate === todayStr()) renderTodaySessions();
+  });
 
   // prevent accidental double-kick on the ring button via touchstart
   document.getElementById('btn-kick').addEventListener('touchstart', e => {
