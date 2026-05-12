@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#f9a8d4" />
+  <title>Baby Kick Tracker for Foram</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── COUNTER SCREEN ── -->
+    <div id="screen-counter" class="screen active">
+      <header class="top-bar">
+        <h1 class="app-title">Baby Kick Tracker for Foram</h1>
+        <p id="today-date" class="today-date"></p>
+      </header>
+
+      <main class="counter-main">
+
+        <!-- idle state -->
+        <div id="state-idle" class="state-block">
+          <p class="hint-text">Ready to start a new session?</p>
+          <button id="btn-start" class="btn-primary">Start Session</button>
+        </div>
+
+        <!-- running state -->
+        <div id="state-running" class="state-block hidden">
+          <div class="ring-wrap">
+            <svg class="progress-ring" viewBox="0 0 160 160">
+              <circle class="ring-bg" cx="80" cy="80" r="70" />
+              <circle id="ring-fill" class="ring-fill" cx="80" cy="80" r="70" />
+            </svg>
+            <div class="ring-center">
+              <span id="kick-count" class="kick-num">0</span>
+              <span class="kick-denom">/ 10</span>
+              <span class="kick-label">kicks</span>
+            </div>
+          </div>
+
+          <div id="timer-display" class="timer">00:00</div>
+
+          <button id="btn-kick" class="btn-kick">
+            <span class="kick-icon">👶</span>
+            <span>Kick!</span>
+          </button>
+
+          <button id="btn-cancel" class="btn-ghost">Cancel Session</button>
+        </div>
+
+        <!-- done state -->
+        <div id="state-done" class="state-block hidden">
+          <div class="done-banner">
+            <div class="done-check">✓</div>
+            <p class="done-title">Session Complete!</p>
+            <p id="done-summary" class="done-summary"></p>
+          </div>
+          <button id="btn-again" class="btn-primary">Start Another Session</button>
+        </div>
+
+        <!-- today's sessions -->
+        <section class="today-sessions">
+          <h2 class="section-title">Today's Sessions</h2>
+          <ul id="sessions-list" class="sessions-list">
+            <li class="empty-msg">No sessions yet today.</li>
+          </ul>
+        </section>
+      </main>
+    </div>
+
+    <!-- ── CALENDAR SCREEN ── -->
+    <div id="screen-calendar" class="screen hidden">
+      <header class="top-bar">
+        <h1 class="app-title">History</h1>
+      </header>
+
+      <main class="calendar-main">
+        <div class="cal-nav">
+          <button id="btn-prev-month" class="cal-nav-btn">&#8249;</button>
+          <span id="cal-month-label" class="cal-month-label"></span>
+          <button id="btn-next-month" class="cal-nav-btn">&#8250;</button>
+        </div>
+
+        <div class="cal-day-headers">
+          <span>Sun</span><span>Mon</span><span>Tue</span>
+          <span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+
+        <div id="cal-grid" class="cal-grid"></div>
+      </main>
+    </div>
+
+    <!-- ── BOTTOM NAV ── -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-screen="counter">
+        <span class="nav-icon">👶</span>
+        <span>Counter</span>
+      </button>
+      <button class="nav-btn" data-screen="calendar">
+        <span class="nav-icon">📅</span>
+        <span>History</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- Day detail bottom sheet -->
+  <div id="day-sheet-overlay" class="sheet-overlay hidden"></div>
+  <div id="day-sheet" class="day-sheet hidden">
+    <div class="sheet-handle"></div>
+    <h3 id="sheet-title" class="sheet-title"></h3>
+    <ul id="sheet-sessions" class="sheet-sessions"></ul>
+    <button id="btn-close-sheet" class="btn-ghost sheet-close">Close</button>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
